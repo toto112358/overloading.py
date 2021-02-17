@@ -9,18 +9,19 @@ with open(os.path.join(os.path.dirname(__file__), 'README.rst')) as f:
 
 setup(
     name = 'OverloadingFixed',
-    version = '1.0.1',
+    version = '1.0.3',
     description = 'Function overloading for Python 3',
     long_description = '\n' + readme,
     url = 'https://github.com/toto112358/overloading.py',
     author = 'L. Pham-Trong',
     author_email = 'spam@lucasanss.xyz',
     license = 'MIT',
-    py_modules = ['overloading'],
+#    py_modules = ['OverloadingFixed'],
     install_requires = [],
     keywords = 'overload function method dispatch',
     classifiers = [
-        'Programming Language :: Python :: 3 :: Only',
-        'License :: OSI Approved :: MIT License'
+        "Programming Language :: Python :: 3",
+        'License :: OSI Approved :: MIT License',
+        "Operating System :: OS Independent",
     ]
 )
