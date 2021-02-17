@@ -9,7 +9,7 @@ with open(os.path.join(os.path.dirname(__file__), 'README.rst')) as f:
 
 setup(
     name = 'OverloadingFixed',
-    version = '1.0',
+    version = '1.0.1',
     description = 'Function overloading for Python 3',
     long_description = '\n' + readme,
     url = 'https://github.com/toto112358/overloading.py',
