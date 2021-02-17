@@ -1,23 +1,4 @@
-"""
---------------
-overloading.py
---------------
-
-Function overloading for Python 3
-
-* Project repository: https://github.com/bintoro/overloading.py
-* Documentation: https://overloading.readthedocs.org/
-
-Copyright © 2014–2016 Kalle Tuure. Released under the MIT License.
-
-"""
-
-__version__ = '0.5.0'
-
-__all__ = ['overload', 'overloaded', 'overloads']
-
-
-
+from ._funcs.typing_funcs import *
 import ast
 from collections import Counter, defaultdict, namedtuple
 from functools import partial, reduce
@@ -27,18 +8,11 @@ import operator
 import re
 import sys
 from types import FunctionType
-
-try:
-    import typing
-except ImportError:
-    typing = None
-
-if sys.version_info < (3, 2):
-    raise ImportError("Module 'overloading' requires Python version 3.2 or higher.")
-
-DEBUG = False
+from ._metaclasses.GenericWrapperMeta import *
 
 
+typing=None
+DEBUG = True
 
 ######
 ##
@@ -461,122 +435,8 @@ def iter_types(types):
             yield type_
 
 
-def normalize_type(type_, level=0):
-    """
-    Reduces an arbitrarily complex type declaration into something manageable.
-    """
-    if not typing or not isinstance(type_, typing.TypingMeta) or type_ is AnyType:
-        return type_
-    if isinstance(type_, typing.TypeVar):
-        if type_.__constraints__ or type_.__bound__:
-            return type_
-        else:
-            return AnyType
-    if issubclass(type_, typing.Union):
-        if not type_.__union_params__:
-            raise OverloadingError("typing.Union must be parameterized")
-        return typing.Union[tuple(normalize_type(t, level) for t in type_.__union_params__)]
-    if issubclass(type_, typing.Tuple):
-        params = type_.__tuple_params__
-        if level > 0 or params is None:
-            return typing.Tuple
-        elif type_.__tuple_use_ellipsis__:
-            return typing.Tuple[normalize_type(params[0], level + 1), ...]
-        else:
-            return typing.Tuple[tuple(normalize_type(t, level + 1) for t in params)]
-    if issubclass(type_, typing.Callable):
-        return typing.Callable
-    if isinstance(type_, typing.GenericMeta):
-        base = find_base_generic(type_)
-        if base is typing.Generic:
-            return type_
-        else:
-            return GenericWrapper(type_, base, level > 0)
-    raise OverloadingError("%r not supported yet" % type_)
 
 
-class GenericWrapperMeta(type):
-
-    def __new__(mcs, name, bases, attrs, type_=None, base=None, simplify=False):
-        cls = super().__new__(mcs, name, bases, attrs)
-        if type_ is None:
-            return cls
-        if base is None:
-            base = find_base_generic(type_)
-        if simplify:
-            type_ = first_origin(type_)
-        cls.type = type_
-        cls.base = base
-        if issubclass(base, typing.Mapping):
-            cls.interface = typing.Mapping
-        elif issubclass(base, typing.Iterable):
-            cls.interface = typing.Iterable
-        else:
-            cls.interface = None
-        cls.derive_configuration()
-        cls.complexity = type_complexity(cls)
-        return cls
-
-    def __init__(cls, *_):
-        pass
-
-    def __call__(cls, type_, base=None, simplify=False):
-        return cls.__class__(cls.__name__, (), {}, type_, base, simplify)
-
-    def __eq__(cls, other):
-        if isinstance(other, GenericWrapperMeta):
-            return cls.type == other.type
-        elif isinstance(other, typing.GenericMeta):
-            return cls.type == other
-        else:
-            return False
-
-    def __hash__(cls):
-        return hash(cls.type)
-
-    def __repr__(cls):
-        return repr(cls.type)
-
-    def __instancecheck__(cls, obj):
-        return cls.type.__instancecheck__(obj)
-
-    def __subclasscheck__(cls, other):
-        return cls.type.__subclasscheck__(other)
-
-    def derive_configuration(cls):
-        """
-        Collect the nearest type variables and effective parameters from the type,
-        its bases, and their origins as necessary.
-        """
-        base_params = cls.base.__parameters__
-        if hasattr(cls.type, '__args__'):
-            # typing as of commit abefbe4
-            tvars = {p: p for p in base_params}
-            types = {}
-            for t in iter_generic_bases(cls.type):
-                if t is cls.base:
-                    type_vars = tuple(tvars[p] for p in base_params)
-                    parameters = (types.get(tvar, tvar) for tvar in type_vars)
-                    break
-                if t.__args__:
-                    for arg, tvar in zip(t.__args__, t.__origin__.__parameters__):
-                        if isinstance(arg, typing.TypeVar):
-                            tvars[tvar] = tvars.get(arg, arg)
-                        else:
-                            types[tvar] = arg
-        else:
-            # typing 3.5.0
-            tvars = [None] * len(base_params)
-            for t in iter_generic_bases(cls.type):
-                for i, p in enumerate(t.__parameters__):
-                    if tvars[i] is None and isinstance(p, typing.TypeVar):
-                        tvars[i] = p
-                if all(tvars):
-                    type_vars = tvars
-                    parameters = cls.type.__parameters__
-                    break
-        cls.type_vars = type_vars
-        cls.parameters = tuple(normalize_type(p, 1) for p in parameters)
 
 
 class GenericWrapper(metaclass=GenericWrapperMeta):
@@ -804,4 +664,3 @@ def dedent(text):
     if indent:
         text = re.sub('^' + indent, '', text, flags=re.M)
     return text
-
