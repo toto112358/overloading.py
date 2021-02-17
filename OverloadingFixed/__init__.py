@@ -14,6 +14,5 @@ Copyright © 2021–2021 L. Pham-Trong Released under the MIT License.
 
 """
 
-__version__ = '1.0.3'
-
+__version__ = '1.11'
 __all__ = ['overload', 'overloaded', 'overloads']

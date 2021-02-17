@@ -1,4 +1,4 @@
-from ._funcs.typing_funcs import *
+import sys
 import ast
 from collections import Counter, defaultdict, namedtuple
 from functools import partial, reduce
@@ -6,9 +6,9 @@ import inspect
 from itertools import chain
 import operator
 import re
-import sys
 from types import FunctionType
-from ._metaclasses.GenericWrapperMeta import *
+from ._funcs import *
+from ._metaclasses import *
 
 
 typing=None
